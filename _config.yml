@@ -2,7 +2,7 @@ title:             Jade Tabony
 email:             j.a.tabony@gmail.com
 description:       Machine Learning Software Developer
 author:            Jade Tabony
-baseurl:           "/blog_jade_tabony"
+baseurl:           "/blog"
 url:               "http://jadetabony.github.io"
 
 # Social Profiles
