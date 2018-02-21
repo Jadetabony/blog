@@ -1,0 +1,19 @@
+title:             Jade Tabony
+email:             j.a.tabony@gmail.com
+description:       Machine Learning Software Developer
+author:            Jade Tabony
+baseurl:           "/blog_jade_tabony"
+url:               "http://jadetabony.github.io"
+
+# Social Profiles
+instagram_username:  theclutteredgearroom
+github_username:   jadetabony
+linkedin_username: jadetabony
+
+# Build settings
+markdown:          kramdown
+paginate:          5
+paginate_path:     "/posts/page:num/"
+plugins:
+  - jekyll-feed
+  - jekyll-paginate

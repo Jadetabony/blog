@@ -1,0 +1,57 @@
+---
+layout: post
+title:  "Sentiment Analysis"
+subtitle: "Rec The Trail"
+date:   2016-8-24 23:45:13 -0400
+background: '/img/posts/02.jpg'
+---
+ 
+
+<p>This is part one of a two part series about my capstone project, Rec The Trail, that I completed for the Galvanize Data Science Immersive program in Seattle, WA in 2016.</p>
+
+<h3>What is Sentiment Analysis?</h3>
+<p>Sentiment analysis in the context of data science is the process of using machine learning and natural language understanding to determine if the overall tone of a body of text is positive, negative or neutral. Because of the subtleties of language, classifying a body of text is often challenging. For example, consider these two sentences:</p>
+
+<blockquote>"That hike was great."</blockquote>
+
+<blockquote>"That hike should have been great."</blockquote>
+
+<p>While a person can clearly interpret the subtleties of the tone, a machine-learning model may not. The tone of text is often determined on the words, bigrams or even trigrams in the text, and therefore, since ‘great’ was in both sentences, the model may rank the sentences similarly. This conundrum has lead sentiment analysis to be an area of focus for many NLP research groups. The most novel (and accurate) models currently know are built using deep learning neural networks, but sentiment analysis models have been built with a myriad of machine learning models, including latent semantic analysis, multinomial bayes, logistic regression, and support vector machines.</p>
+
+<h2>How this relates to Rec The Trail</h2>
+<p>When I began to collect data and build my recommendation system, I realized that the Washington Trails Association only provides information on the average rating of each hike, not the individual ratings by user. This individual user rating data is crucial for building a collaborative-filtering recommendation system. While the lack of this data did not prevent me from building an item content similarity recommendation system, I still wanted to build a collaborative-filtering system to potentially identify and recommend hikes that might give the user some variety.</p>
+
+<p>While I lacked individual user hike ratings, there was a lot of trip reports written, often hundreds or even thousands per hike, each with author username. Therefore, I hypothesized that I could use this text data and build a sentiment analysis based rating system, in which I could convert each report into a rating from 1 to 5.</p>
+
+<h2>How it is built and trained?</h2>
+<p>While there are built-in sentiment analysis packages in Python, such as TextBlob’s polarity scale or Turi’s sentiment analysis package, I wanted to try building my own sentiment analysis model that was trained specifically on hiking data. In order to build a model, you first need labeled training data. In most examples that you find online, people will build their models on text reviews for movies or products or services (such as Yelp or IMDB) in which a rating (1-5 stars) accompanies each review. Therefore, you can break each review into its individual words or bigrams and determine whether the words are usually used in positive or negative contexts. When new, unrated text is then introduced into the model, the models will then classify the text as positive or negative based on the individual words present.</p>
+
+<p>So first off, I needed training data. I scraped a bunch of training reviews from everytrail.com, where every review is accompanied by a rating.  I decided that all of the reviews that were given a 3 or lower would be classified as negative in my training set. I used the TF-IDF vectorizer with a lemmatizer to break text up into words and convert the words into their respective base words (example below).  From there, I ran the data through multiple flavors of classifiers, including logistic regression, Multinomial Bayes, Gradient Boosted trees, AdaBoosted trees.  I evaluated each model with its accuracy, recall and precision.  Eventually, I decided to use an AdaBoosted model (2) with a Multinomial Bayes base classifier (3).</p>
+
+<p>After deciding on my model, I decided to GridSearch to figure out what learning parameters led to the best results.</p>
+
+<p>Unsurprisingly, the GridSearch chose the slowest learning rate (this can prevent the model from overfitting early).  What did surprise me was that the model chose the smallest number of estimators.  Usually, you would find that as you use a slower learning rate, you need a higher number of estimators to achieve similar accuracies. However, this is a topic for another day.</p>
+
+<p>Once I was satisfied with my model, I pickled it and used it on all of my trip reports scraped from the WTA.</p>
+
+<h2>In Practice</h2>
+<p>Of course, this model will only give you a classification- 1 for positive or 0 for negative.  How do we turn that into a rating?  Instead of using the predict functionality of the model, I used the predict_proba function.  This returns a probability between 0 and 1 that the text submitted is positive.  From there, I was able to break them into bins and assign ratings.  The lowest quintile received a 1, the quintile above that a 2 and so on.  Now, under this assumption, the reports are evenly distributed across all of the potential ratings, which is completely unrealistic compared to what you will actually see in hiking ratings, which are usually highly weighted to fives.  I used this assumption because I wanted to account for this skew and only give the ones that were considered the top of the top a five.</p>
+
+<p>So, how did it work in the end?</p>
+
+<p>Its hard to know without just eyeballing the results.  Overall, it seems to be working well though.  For example, this is a report that when run through my model, received a prediction of 5 star rating.</p>
+
+<blockquote>“This is a favorite hike, and even though the low clouds kept us from seeing the amazing Mt Rainier views it was still a wonderful day! Previous trip reports said that the trail is muddy between the trail head and the lake…. Having hiked this before I didn’t pay much attention because it’s always a little muddy there… But it is REALLY muddy!! Passable, but very muddy. There are also many trees down on the trail. All can be easily climbed over, under or walked around. Lots of wildflowers blooming; bear grass, Avalanche lilies, lupine, magenta paintbrush, yellow flowers whose name I don’t know, and mountain Heather beginning to bloom too. A pair of hikers coming down the trail as we were headed up saw a bear in the first meadow. We saw bear scat more than once, but no bears. The mosquitos were pretty thick before and around the lake, but not bad after that. A couple more days of sunshine and the flowers will really be impressive!”</blockquote>
+
+<p>And then one that was given a 1 star rating.</p>
+
+<blockquote>“If you like donating blood, you’ll enjoy this hike! The mosquitoes were terrible even with bug spray. The hike it’s self was quite muddy in places, but the kids thought that was extra fun. Very quiet & pretty lake with several nice campsites. Very little beach access, but we managed to find a spot big enough to enjoy lunch & swim. Not sure I’d take my kids on this one again though because of the bugs & limited beach.”</blockquote>
+
+<p>Overall, working well.  From there, I was able to throw my ratings into my recommender system, which will be discussed in part two of this series.</p>
+
+<h2>Resources</h2>
+<ol>
+	<li>Andy Bromberg. (n.d.). Retrieved August 09, 2016, from http://andybromberg.com/sentiment-analysis-python/</li>
+	<li>Silva, Nádia, Estevam Hruschka, and Eduardo Hruschka. “Biocom Usp: Tweet Sentiment Analysis with Adaptive Boosting Ensemble.” Proceedings of the 8th International Workshop on Semantic Evaluation (SemEval 2014) (2014): n. pag. Web.</li>
+	<li>Machine Learning Blog & Software Development News. (n.d.). Retrieved August 09, 2016, from http://blog.datumbox.com/machine-learning-tutorial-the-naive-bayes-text-classifier/</li>
+</ol>

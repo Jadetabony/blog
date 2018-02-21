@@ -1,0 +1,56 @@
+---
+layout: post
+title:  "Recommendation Systems"
+subtitle: "Rec The Trail"
+date:   2016-10-28 23:45:13 -0400
+background: '/img/posts/05.jpg'
+---
+
+<p>This is part two of three part series about my capstone project, Rec The Trail, that I completed for the Galvanize Data Science Immersive program in Seattle, WA in 2016.</p>
+
+<h2>Recommender Systems</h2>
+<p>If you’ve spent any amount of time on the internet, you’ve most likely come across recommendation systems.  Netflix telling you which movies to watch, Amazon telling you what other things you might want to buy, CNN telling you which articles are similar to the one that you just read. So they are all over the place, but how do we build them?</p>
+
+<p>The short answer, it depends on what data you have available.</p>
+
+<p>The Turi (recently bought by Apple) blog offers a great breakdown of the different recommender systems and how to decide which ones to use, but I’ll give a brief breakdown here as well.  The type of data you have- explicit, implicit or item content- will dictate what kind of recommender you use. Explicit data means that you have a matrix of actual rating data and a recommender system using this data is trying to predict which other items a user might rate highly, given the ratings of similar users.  The “Users who liked this product, also liked these products” recommenders.  With implicit data, there is no rating data, just user and item data.  An example of this might be if you have purchasing data, but no ratings.  A recommender system would then make recommendations off of which items have seen similar interactions between users. The “Users who bought this item also bought these items” recommenders.  Lastly, in the case where you have no user data, you can use an item content similarity recommender.  These recommenders base their recommendations off items that most similar to the one that the user liked.  These are often the easiest to make and can most effectively deal with the infamous “cold start” problem, but are not always applicable.  For example, if a user has bought a tent at REI, you would not want the REI recommendation systems to send you more tent recommendations, but instead items that other users think went with their tents (stoves, sleeping bags, disco balls…).</p>
+
+<h2>Recommend a Trail for Me</h2>
+<p>So what did I use for Rec the Trail?  If you read my post on sentiment analysis, you’ll know that I created my own user rating matrix from trip report text.  Therefore, I had explicit data. Because of that, I was able to build a ranking factorization recommender in Turi GraphLab.</p>
+
+<p>Great, easy enough… Almost too easy.</p>
+
+<p>Yes.  Yes it was.  Turns out, if you ask the recommender for a recommendation for someone with no existing ratings, it will pick the same, most popular hikes- with no degree of personalization.  This is caused by what is known as the cold start problem.</p>
+
+<h2>The Cold Start Problem</h2>
+<p>A common problem in recommender systems, a cold start describes an instances of a new user in a system on which little personal preference or rating data is available.  An example of this would be a new user to Netflix.  Since the recommender system knows very little about what kind of movies the new user likes, there will be little to no personalization until ratings are provided.  As a result, you will most likely get recommendations to watch only the most popular movies on Netflix.  Even once you provide one or two ratings, there is such a large corpus of movies and genres that it will still be difficult for the system to pick out the nuances about what makes a movie appealing to a certain person.</p>
+
+<p>Since this is by no means a novel problem in recommender system performance, there are many available solutions.  One of which is item clustering and item similarity.  In the Netflix example, movies can be clustered based on genre, year, actors, tone, so on. So when you visit or rate an item/movie/product, it will show you items that are similar to the one that you visited.  So in the case of my recommender, if someone inputs a hike that they like but don’t have any previous “ratings“, I just show them hikes that are most similar to the one that they input.</p>
+
+<p>But now the question becomes, most similar based on what criteria? When I scraped the WTA website, I scraped the following metadata:</p>
+
+<ul>
+	<li>Elevation gain</li>
+	<li>Total length</li>
+	<li>Latitude and longitude coordinates- which I then used to get the drive time from Seattle.</li>
+	<li>Features of the hike such as waterfalls, lakes, child friendly, etc</li>
+	<li>Region</li>
+	<li>Overall star rating</li>
+	<li>Number of trip reports- which I believe is a proxy for hike popularity</li>
+</ul>
+
+<p>Initially, I tested the item similarity recommender with all of the features having equal weights.  After eyeballing the results of the recommender, I was finding that the hikes recommended were actually not that similar, or at least weren’t giving people the kind of hikes that they might expect.  For example, when I prompted the recommender using Mount Pilchuck, a rather strenuous hike, it was returning flat loop hikes through Discovery Park- a state park in the middle of Seattle.  A lovely hike, but doubtfully similar to Mount Pilchuck. Because of this, I wanted to do a little recon on what features of hike are actually most important to people.</p>
+
+<p>In order to determine which features people care about the most, I ran a quick random forest model with average star rating as the target and all of the other metadata as the features in order to determine feature importance. I then used the fraction of samples affected as the weights for the features in the item content similarity recommender.</p>
+
+<h2>Feature Importance in Predicting Average Star Rating</h2>
+<p>After eyeballing the results from these recommenders (the best way I could find to evaluate the models), I determined that this was a good way to deal with the cold start problems and generally gave people recommendations that made sense.</p>
+
+<p>Give it a try and let me know what you think!</p>
+
+<h2>Resources</h2>
+<ol>
+	<li>Turi Machine Learning Platform User Guide. (n.d.). Retrieved August 09, 2016, from https://turi.com/learn/userguide/recommender/choosing-a-model.html</li>
+	<li>Debnath, S., Ganguly, N., & Mitra, P. (2008). Feature weighting in content based recommendation system using social network analysis. Proceeding of the 17th International Conference on World Wide Web – WWW ’08. doi:10.1145/1367497.1367646</li>
+	<li>Sobhanam, H., & Mariappan, A. K. (2013). Addressing cold start problem in recommender systems using association rules and clustering technique. 2013 International Conference on Computer Communication and Informatics. doi:10.1109/iccci.2013.6466121</li>
+</ol>
